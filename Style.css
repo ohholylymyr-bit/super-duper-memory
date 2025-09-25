@@ -1,0 +1,99 @@
+/* HenryBank moderni demo CSS */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', 'Arial', sans-serif;
+}
+
+body {
+  background: #e6f0fa; /* vaaleansininen tausta */
+  color: #1a1a1a;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  background: #004080;
+  color: #fff;
+  padding: 20px 0;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: 1px;
+}
+
+main {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+section {
+  background: #fff;
+  padding: 25px 20px;
+  margin-bottom: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+input:focus, select:focus {
+  border-color: #004080;
+  outline: none;
+  box-shadow: 0 0 6px rgba(0,64,128,0.2);
+}
+
+button {
+  background: #004080;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #0059b3;
+}
+
+p {
+  margin: 10px 0;
+  font-size: 0.95rem;
+}
+
+#balance {
+  font-weight: bold;
+  color: #004080;
+}
+
+h3 {
+  margin-top: 20px;
+  color: #004080;
+  font-size: 1.1rem;
+}
+
+#bank-msg {
+  margin-top: 15px;
+  font-style: italic;
+  color: #0066cc;
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 0 10px;
+  }
+}
