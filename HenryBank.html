@@ -1,140 +1,53 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HenryBank</title>
-<link rel="stylesheet" href="style.css">
-<script type="module" src="firebase-config.js"></script>
+<title>HenryBankki</title>
+<style>
+body { font-family: Arial; margin: 20px; }
+.back-arrow { position: fixed; top: 10px; left: 10px; cursor: pointer; font-size: 20px; }
+#dashboard { margin-top: 50px; }
+button { margin: 5px; padding: 10px; }
+</style>
 </head>
 <body>
-<header>
-  <h1>HenryBank</h1>
-</header>
 
-<main>
-  <section id="login-section">
-    <h2>Kirjaudu sisään</h2>
-    <input type="email" id="email" placeholder="Sähköposti">
-    <input type="password" id="password" placeholder="Salasana">
-    <button id="login-btn">Kirjaudu</button>
-    <p id="login-msg"></p>
-  </section>
+<button class="back-arrow" onclick="goBack()">⬅</button>
+<h1>HenryBankki</h1>
 
-  <section id="bank-section" style="display:none;">
-    <h2>Tilinäkymä</h2>
-    <p>Saldo: €<span id="balance">0</span></p>
-    <h3>IBAN-siirto</h3>
-    <input type="text" id="iban" placeholder="IBAN">
-    <input type="number" id="amount" placeholder="Summa (€)">
-    <button id="send-btn">Lähetä</button>
-    <h3>Maksupääte (vain sijoitussivulta tokenilla)</h3>
-    <input type="text" id="token" placeholder="Token">
-    <input type="number" id="crypto-amount" placeholder="Ostettava määrä">
-    <select id="crypto-select">
-      <option value="WATTI">WATTI</option>
-      <option value="WUF">WUF</option>
-    </select>
-    <button id="pay-btn">Maksa</button>
-    <p id="bank-msg"></p>
-    <button id="logout-btn">Kirjaudu ulos</button>
-  </section>
-</main>
+<div id="dashboard">
+  <h2>Euro-saldo</h2>
+  <div id="balance-display"></div>
+  
+  <h2>Toiminnot</h2>
+  <div>
+    <button onclick="simulateReceivedCrypto('WATTI', 10)">Vastaanota 10 WATTI</button>
+    <button onclick="addFunds(100)">Lisää saldoa adminilta 100 €</button>
+  </div>
+</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyATO0586cwwqxxV0h1t16WrKfLgbXsy0-g",
+  authDomain: "henrybankki-ja-hamster-exc.firebaseapp.com",
+  projectId: "henrybankki-ja-hamster-exc",
+  storageBucket: "henrybankki-ja-hamster-exc.firebasestorage.app",
+  messagingSenderId: "931698320471",
+  appId: "1:931698320471:web:b7736abed3c840f9e3ef12",
+  measurementId: "G-W603PB8QNK"
+};
+firebase.initializeApp(firebaseConfig);
 
-import { firebaseConfig } from './firebase-config.js';
+let euroBalance=1000;
+function updateBalance(){document.getElementById('balance-display').innerHTML=euroBalance+" €";}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-const loginSection = document.getElementById('login-section');
-const bankSection = document.getElementById('bank-section');
-const loginBtn = document.getElementById('login-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const sendBtn = document.getElementById('send-btn');
-const payBtn = document.getElementById('pay-btn');
-
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginMsg = document.getElementById('login-msg');
-
-const balanceSpan = document.getElementById('balance');
-const ibanInput = document.getElementById('iban');
-const amountInput = document.getElementById('amount');
-const bankMsg = document.getElementById('bank-msg');
-
-const tokenInput = document.getElementById('token');
-const cryptoAmountInput = document.getElementById('crypto-amount');
-const cryptoSelect = document.getElementById('crypto-select');
-
-let currentUser = null;
-
-// Kovakoodattu admin-demo
-const ADMIN_EMAIL = "Katavnokk@gmail.com";
-
-loginBtn.addEventListener('click', async () => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    currentUser = userCredential.user;
-    loginSection.style.display = 'none';
-    bankSection.style.display = 'block';
-
-    // Hae saldo Firestoresta
-    const userDocRef = doc(db, 'bank_accounts', currentUser.email);
-    const docSnap = await getDoc(userDocRef);
-    if (!docSnap.exists()) {
-      await setDoc(userDocRef, { balance: 0 });
-      balanceSpan.textContent = 0;
-    } else {
-      balanceSpan.textContent = docSnap.data().balance;
-    }
-
-  } catch(e) {
-    loginMsg.textContent = "Virhe kirjautumisessa";
-    console.log(e);
-  }
-});
-
-logoutBtn.addEventListener('click', async () => {
-  await signOut(auth);
-  currentUser = null;
-  loginSection.style.display = 'block';
-  bankSection.style.display = 'none';
-});
-
-sendBtn.addEventListener('click', async () => {
-  const targetIban = ibanInput.value;
-  const amt = parseFloat(amountInput.value);
-  if (!amt || amt <= 0) { bankMsg.textContent = "Anna kelvollinen summa"; return; }
-  if (currentUser.email !== ADMIN_EMAIL) { bankMsg.textContent = "Vain admin voi lisätä demo-rahasiirtoja"; return; }
-
-  // Demo: Lisää adminin saldoon
-  const adminDocRef = doc(db, 'bank_accounts', ADMIN_EMAIL);
-  const docSnap = await getDoc(adminDocRef);
-  let newBalance = docSnap.data().balance + amt;
-  await updateDoc(adminDocRef, { balance: newBalance });
-  balanceSpan.textContent = newBalance;
-  bankMsg.textContent = `Lisätty €${amt} adminille.`;
-});
-
-payBtn.addEventListener('click', async () => {
-  const token = tokenInput.value;
-  const crypto = cryptoSelect.value;
-  const amt = parseFloat(cryptoAmountInput.value);
-  if (!token || !crypto || !amt) { bankMsg.textContent = "Täytä kaikki kentät"; return; }
-  // Demo: kaikki eurot menee adminille
-  const adminDocRef = doc(db, 'bank_accounts', ADMIN_EMAIL);
-  const docSnap = await getDoc(adminDocRef);
-  let newBalance = docSnap.data().balance + amt;
-  await updateDoc(adminDocRef, { balance: newBalance });
-  balanceSpan.textContent = newBalance;
-  bankMsg.textContent = `${crypto} ostettu €${amt} summalla (demo). Token: ${token}`;
-});
+function simulateReceivedCrypto(crypto,amount){console.log("Vastaanotettu "+amount+" "+crypto); euroBalance+=amount*10; updateBalance();}
+function addFunds(amount){euroBalance+=amount; console.log("Admin lisäsi "+amount+" €"); updateBalance();}
+function goBack(){window.history.back();}
+updateBalance();
 </script>
 </body>
 </html>
+
